@@ -11,6 +11,13 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
 endif()
 
+# Validate build type
+if(NOT CMAKE_BUILD_TYPE MATCHES "^(Debug|Release|RelWithDebInfo|MinSizeRel)$")
+    message(FATAL_ERROR "Invalid build type: ${CMAKE_BUILD_TYPE}. Must be one of: Debug, Release, RelWithDebInfo, MinSizeRel")
+endif()
+
+message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
+
 # ================================================================================
 # 1. Output Folder: _LIBRARY
 # ================================================================================
@@ -21,10 +28,20 @@ set(OUTPUT_PROJECT_INCLUDE_DIR "${OUTPUT_INCLUDE_DIR}/${PROJECT_NAME}")
 set(OUTPUT_LIB_DIR "${OUTPUT_BASE}/lib")
 
 # ================================================================================
-# 2. CUDA Configuration
+# 2. CUDA Configuration (build type specific)
 # ================================================================================
 set(CMAKE_CUDA_ARCHITECTURES "87")
-set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -O3")
+
+# CUDA flags based on build type
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    # Debug: No optimization, include debug symbols
+    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -g -G -O0")
+    set(CMAKE_CUDA_FLAGS_DEBUG "-g -G -O0")
+else()
+    # Release: Full optimization
+    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -O3")
+    set(CMAKE_CUDA_FLAGS_RELEASE "-O3")
+endif()
 
 # ================================================================================
 # 3. Other dependencies (uncomment if needed)
@@ -68,6 +85,23 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
     POSITION_INDEPENDENT_CODE ON
 )
 
+# ================================================================================
+# 2.5. Compiler flags based on build type
+# ================================================================================
+# C++ compiler flags for Debug
+target_compile_options(${PROJECT_NAME} PRIVATE
+    $<$<CONFIG:Debug>:-g -O0>
+    $<$<CONFIG:Release>:-O3 -DNDEBUG>
+    $<$<CONFIG:RelWithDebInfo>:-O2 -g -DNDEBUG>
+    $<$<CONFIG:MinSizeRel>:-Os -DNDEBUG>
+)
+
+# Add debug macro for Debug builds
+target_compile_definitions(${PROJECT_NAME} PRIVATE
+    $<$<CONFIG:Debug>:DEBUG=1>
+    $<$<CONFIG:Release>:NDEBUG=1>
+)
+
 target_include_directories(${PROJECT_NAME} PUBLIC
     ${PROJECT_SOURCE_DIR}/include
     ${PROJECT_SOURCE_DIR}/3rdparty/include
@@ -94,5 +128,14 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:${PROJECT_NAME}> ${OUTPUT_LIB_DIR}/
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${PROJECT_SOURCE_DIR}/3rdparty/include ${OUTPUT_INCLUDE_DIR}
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${PROJECT_SOURCE_DIR}/3rdparty/lib ${OUTPUT_LIB_DIR}
-    COMMENT "Copying headers, library and 3rdparty to ${OUTPUT_FOLDER}/"
+    COMMENT "Copying headers, library and 3rdparty to ${OUTPUT_FOLDER}/ (${CMAKE_BUILD_TYPE})"
 )
+
+# ================================================================================
+# 8. Test Programs (optional)
+# ================================================================================
+option(BUILD_TEST_PROGRAMS "Build test programs (detect.cpp and segment.cpp)" OFF)
+
+if(BUILD_TEST_PROGRAMS)
+    add_subdirectory(test)
+endif()

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Visual2DInfer Build Script
-# Usage: ./build.sh [clean|rebuild] [Debug|Release]
+# Usage: ./build.sh [clean|rebuild] [Debug|Release] [test]
 
 set -e  # Exit immediately if a command exits with a non-zero status
 
@@ -15,6 +15,7 @@ NC='\033[0m' # No Color
 PROJECT_NAME="Visual2DInfer"
 BUILD_DIR="build"
 BUILD_TYPE="Release"
+BUILD_TEST=false  # Default: do not build test programs
 
 # Parse arguments
 CLEAN_BUILD=false
@@ -32,9 +33,12 @@ for arg in "$@"; do
         Debug|Release)
             BUILD_TYPE="$arg"
             ;;
+        test)
+            BUILD_TEST=true
+            ;;
         *)
             echo -e "${YELLOW}Unknown argument: $arg${NC}"
-            echo "Usage: $0 [clean|rebuild] [Debug|Release]"
+            echo "Usage: $0 [clean|rebuild] [Debug|Release] [test]"
             exit 1
             ;;
     esac
@@ -46,6 +50,7 @@ echo -e "${GREEN}  ${PROJECT_NAME} Build Script${NC}"
 echo -e "${GREEN}========================================${NC}"
 echo -e "Build Type: ${YELLOW}${BUILD_TYPE}${NC}"
 echo -e "Build Directory: ${YELLOW}${BUILD_DIR}${NC}"
+echo -e "Build Test Programs: ${YELLOW}${BUILD_TEST}${NC}"
 echo ""
 
 # Clean build directory
@@ -60,6 +65,12 @@ if [ "$CLEAN_BUILD" = true ] || [ "$REBUILD" = true ]; then
     fi
     echo -e "${GREEN}Clean completed${NC}"
     echo ""
+    
+    # If only clean (not rebuild), exit after cleaning
+    if [ "$REBUILD" = false ]; then
+        echo -e "${GREEN}Clean operation completed. Use './build.sh rebuild' to clean and rebuild.${NC}"
+        exit 0
+    fi
 fi
 
 # Create build directory
@@ -73,9 +84,17 @@ cd "$BUILD_DIR"
 
 # Configure CMake
 echo -e "${GREEN}Configuring CMake...${NC}"
-cmake .. \
-    -DCMAKE_BUILD_TYPE="${BUILD_TYPE}" \
-    -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+if [ "$BUILD_TEST" = true ]; then
+    cmake .. \
+        -DCMAKE_BUILD_TYPE="${BUILD_TYPE}" \
+        -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+        -DBUILD_TEST_PROGRAMS=ON
+else
+    cmake .. \
+        -DCMAKE_BUILD_TYPE="${BUILD_TYPE}" \
+        -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+        -DBUILD_TEST_PROGRAMS=OFF
+fi
 
 if [ $? -ne 0 ]; then
     echo -e "${RED}CMake configuration failed!${NC}"
@@ -121,6 +140,20 @@ if [ -d "_LIBRARY" ]; then
     fi
 else
     echo -e "${YELLOW}Warning: Output directory _LIBRARY not found${NC}"
+fi
+
+# Check test programs if built
+if [ "$BUILD_TEST" = true ]; then
+    if [ -f "${BUILD_DIR}/test/test_detect" ] || [ -f "${BUILD_DIR}/test/test_segment" ]; then
+        echo ""
+        echo -e "${GREEN}Test programs built:${NC}"
+        if [ -f "${BUILD_DIR}/test/test_detect" ]; then
+            echo -e "  - ${GREEN}${BUILD_DIR}/test/test_detect${NC}"
+        fi
+        if [ -f "${BUILD_DIR}/test/test_segment" ]; then
+            echo -e "  - ${GREEN}${BUILD_DIR}/test/test_segment${NC}"
+        fi
+    fi
 fi
 
 echo ""

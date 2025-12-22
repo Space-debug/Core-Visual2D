@@ -12,9 +12,9 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 # ================================================================================
-# 1. Output Folder: install
+# 1. Output Folder: _LIBRARY
 # ================================================================================
-set(OUTPUT_FOLDER "install" CACHE PATH "Directory to output library and headers")
+set(OUTPUT_FOLDER "_LIBRARY" CACHE PATH "Directory to output library and headers")
 set(OUTPUT_BASE "${CMAKE_CURRENT_LIST_DIR}/${OUTPUT_FOLDER}")
 set(OUTPUT_INCLUDE_DIR "${OUTPUT_BASE}/include")
 set(OUTPUT_PROJECT_INCLUDE_DIR "${OUTPUT_INCLUDE_DIR}/${PROJECT_NAME}")
@@ -86,7 +86,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 )
 
 # ================================================================================
-# 7. Copy Headers, Library and 3rdparty to install/ after build
+# 7. Copy Headers, Library and 3rdparty to _LIBRARY/ after build
 # ================================================================================
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E make_directory ${OUTPUT_PROJECT_INCLUDE_DIR} ${OUTPUT_INCLUDE_DIR} ${OUTPUT_LIB_DIR}

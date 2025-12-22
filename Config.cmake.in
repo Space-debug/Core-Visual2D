@@ -1,0 +1,4 @@
+@PACKAGE_INIT@
+
+include("${CMAKE_CURRENT_LIST_DIR}/Visual2DInferTargets.cmake")
+check_required_components(Visual2DInfer)

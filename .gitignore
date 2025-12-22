@@ -3,7 +3,8 @@
 # =============================
 build/
 devel/
-install/           
+install/       
+_LIBRARY/
 logs/              
 log/
 .map/              

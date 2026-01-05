@@ -189,6 +189,7 @@ id_rsa*
 *.onnx
 *.engine
 *.pt
+*.mp4
 
 # Git
 .gitignore.swp   

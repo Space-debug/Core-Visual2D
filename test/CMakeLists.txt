@@ -58,13 +58,11 @@ add_executable(test_detect
 target_include_directories(test_detect PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${PARENT_DIR}/include
-    ${PARENT_DIR}/3rdparty/include
     ${OUTPUT_INCLUDE_DIR}
     ${OUTPUT_INCLUDE_DIR}/Visual2DInfer
 )
 
 target_link_directories(test_detect PRIVATE
-    ${PARENT_DIR}/3rdparty/lib
     ${OUTPUT_LIB_DIR}
 )
 
@@ -74,7 +72,7 @@ target_link_libraries(test_detect PRIVATE
     ${OpenCV_LIBS}
 )
 
-# Link 3rdparty libraries explicitly (needed for operator<< symbols)
+# Link subproject libraries explicitly (needed for operator<< symbols)
 target_link_libraries(test_detect PRIVATE
     trtyolo
     custom_plugins
@@ -96,13 +94,11 @@ add_executable(test_segment
 target_include_directories(test_segment PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${PARENT_DIR}/include
-    ${PARENT_DIR}/3rdparty/include
     ${OUTPUT_INCLUDE_DIR}
     ${OUTPUT_INCLUDE_DIR}/Visual2DInfer
 )
 
 target_link_directories(test_segment PRIVATE
-    ${PARENT_DIR}/3rdparty/lib
     ${OUTPUT_LIB_DIR}
 )
 
@@ -112,7 +108,7 @@ target_link_libraries(test_segment PRIVATE
     ${OpenCV_LIBS}
 )
 
-# Link 3rdparty libraries explicitly (needed for operator<< symbols)
+# Link subproject libraries explicitly (needed for operator<< symbols)
 target_link_libraries(test_segment PRIVATE
     trtyolo
     custom_plugins

@@ -1,9 +1,6 @@
 cmake_minimum_required(VERSION 3.18 FATAL_ERROR)
 project(Visual2DInfer VERSION 1.0.0 LANGUAGES CXX CUDA)
 
-# Include GNUInstallDirs to get standard installation directories
-include(GNUInstallDirs)
-
 # Set C++ standard
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -92,6 +89,10 @@ endfunction()
 # ================================================================================
 # 3. Add Subprojects
 # ================================================================================
+# 设置安装路径，使子库安装到与主库一致的目录
+include(GNUInstallDirs)
+set(CMAKE_INSTALL_PREFIX "${OUTPUT_BASE}" CACHE PATH "Install directory prefix" FORCE)
+set(CMAKE_INSTALL_INCLUDEDIR "include/deploy" CACHE PATH "Install directory for header files" FORCE)
 # 添加子项目，使 OUTPUT_LIB_DIR 在子项目中可用
 add_subdirectory(modules/trtyolo)
 add_subdirectory(modules/plugin)
@@ -158,16 +159,6 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
     $<$<CONFIG:Release>:NDEBUG=1>
 )
 
-# Create deploy directory mapping for trtyolo.hpp at compile time
-set(DEPLOY_DIR "${PROJECT_SOURCE_DIR}/include/deploy")
-file(MAKE_DIRECTORY ${DEPLOY_DIR})
-# Create a symlink or copy trtyolo.hpp to deploy directory for compilation
-configure_file(
-    "${PROJECT_SOURCE_DIR}/modules/trtyolo/infer/trtyolo.hpp"
-    "${DEPLOY_DIR}/trtyolo.hpp"
-    COPYONLY
-)
-
 target_include_directories(${PROJECT_NAME} PUBLIC
     ${PROJECT_SOURCE_DIR}/include
     ${OUTPUT_INCLUDE_DIR}
@@ -191,7 +182,6 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E make_directory ${OUTPUT_PROJECT_INCLUDE_DIR} ${OUTPUT_INCLUDE_DIR} ${OUTPUT_LIB_DIR} ${OUTPUT_INCLUDE_DIR}/deploy
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${PROJECT_SOURCE_DIR}/include/Visual2DInfer.h ${OUTPUT_PROJECT_INCLUDE_DIR}/Visual2DInfer.h
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${PROJECT_SOURCE_DIR}/modules/trtyolo/infer/trtyolo.hpp ${OUTPUT_INCLUDE_DIR}/deploy/trtyolo.hpp
     COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:${PROJECT_NAME}> ${OUTPUT_LIB_DIR}/
     COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:trtyolo> ${OUTPUT_LIB_DIR}/
     COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:custom_plugins> ${OUTPUT_LIB_DIR}/

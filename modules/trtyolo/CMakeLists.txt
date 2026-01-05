@@ -33,54 +33,27 @@ function(configure_target_common_properties target)
 endfunction()
 
 #-------------------------------------------------------------------------------
-# 安装目标
-#-------------------------------------------------------------------------------
-function(install_target target target_type)
-    if(target_type STREQUAL "library")
-        # 安装库目标
-        install(TARGETS ${target}
-            EXPORT ${target}Targets
-            LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-            # ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-            # RUNTIME DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        )
-    elseif(target_type STREQUAL "python")
-        # 安装 Python 绑定目标
-        install(TARGETS ${target}
-            EXPORT ${target}Targets
-            LIBRARY DESTINATION ${PROJECT_SOURCE_DIR}/trtyolo/libs
-        )
-    else()
-        message(WARNING "Unknown target type: ${target_type}")
-    endif()
-endfunction()
-
-#-------------------------------------------------------------------------------
 # trtyolo 库
 #-------------------------------------------------------------------------------
 add_library(trtyolo SHARED)
 add_target_compile_files(trtyolo)
 configure_target_common_properties(trtyolo)
-install_target(trtyolo "library")
 
-# 设置变量
-set(PACKAGE_VERSION "${PROJECT_VERSION}")
-set(PACKAGE_DIRS "${CMAKE_INSTALL_PREFIX}")
-set(PACKAGE_INCLUDE_DIRS "${CMAKE_INSTALL_INCLUDEDIR}")
-set(PACKAGE_LIBRARY_DIRS "${CMAKE_INSTALL_LIBDIR}")
-set(PACKAGE_LIBRARIES "trtyolo")
-
-# 安装头文件
+# 安装头文件到 include/deploy 目录
 install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/infer/trtyolo.hpp"
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
 )
 
-# 创建 tensorrt-yolo-config.cmake 文件
-configure_file(
-    "${PROJECT_SOURCE_DIR}/cmake/tensorrt-yolo-config.cmake.in"
-    "${PROJECT_SOURCE_DIR}/cmake/tensorrt-yolo-config.cmake"
-    @ONLY
+# 安装库文件
+install(TARGETS trtyolo
+    EXPORT trtyoloTargets
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}  # 安装到 lib 目录
+    # ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}  # 安装到 lib 目录
+    # RUNTIME DESTINATION ${CMAKE_INSTALL_LIBDIR}  # 安装到 lib 目录
 )
-install(FILES "${PROJECT_SOURCE_DIR}/cmake/tensorrt-yolo-config.cmake"
-    DESTINATION "${CMAKE_INSTALL_PREFIX}"
+
+# 子库编译完成后立即安装到指定目录
+add_custom_command(TARGET trtyolo POST_BUILD
+    COMMAND ${CMAKE_COMMAND} --install ${CMAKE_CURRENT_BINARY_DIR} --prefix ${CMAKE_INSTALL_PREFIX} --config ${CMAKE_BUILD_TYPE}
+    COMMENT "Installing trtyolo library and headers to ${CMAKE_INSTALL_PREFIX}"
 )

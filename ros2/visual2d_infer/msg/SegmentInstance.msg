@@ -1,0 +1,9 @@
+int32 class_id
+float32 score
+float32 left
+float32 top
+float32 right
+float32 bottom
+uint32 mask_width
+uint32 mask_height
+float32[] mask_data

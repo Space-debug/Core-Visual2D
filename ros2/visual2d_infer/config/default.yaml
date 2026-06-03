@@ -1,0 +1,5 @@
+visual2d_infer:
+  ros__parameters:
+    engine_path: ""
+    image_topic: "image_raw"
+    thread_num: 1
